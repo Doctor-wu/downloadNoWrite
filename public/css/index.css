@@ -194,3 +194,21 @@ html {
         transform: rotate(1turn);
     }
 }
+
+#status {
+    height: 12px;
+    width: 12px;
+    float: right;
+    margin-right: 10px;
+    margin-top: 8px;
+    border-radius: 50%;
+    background-color: grey;
+}
+
+#status.online {
+    background-color: greenyellow;
+}
+
+#status.offline {
+    background-color: red;
+}
