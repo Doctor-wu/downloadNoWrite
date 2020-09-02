@@ -9,6 +9,7 @@ const { io, emitMsg2 } = require('./websocket')(app);
 app.use(express.static('../public'));
 const token = require('./token.json');
 const auth = require('./auth.js')(emitMsg2);
+const downloadParseFile = require('./downloadParseFile')(emitMsg2);
 
 let emitMsg = function(msg) {
     if (!msg) return;
@@ -72,6 +73,7 @@ let getFile = function(res, param) {
             if (resolve.data.state === 200) {
                 console.log(resolve.data.data);
                 emitMsg({ message: '获取下载地址成功', data: JSON.parse(resolve.data.data.boData).xiaZaiDiZhi });
+                downloadParseFile(JSON.parse(resolve.data.data.boData).xiaZaiDiZhi);
                 res.end();
             } else {
                 console.log(`${resolve.data.message},${resolve.data.cause}`);
@@ -93,7 +95,6 @@ let getFile = function(res, param) {
                         getFile(res, param);
                     });
             }
-
         })
         .catch(err => {
             console.log(`ERROR\n${err}`);
@@ -101,6 +102,8 @@ let getFile = function(res, param) {
             res.end();
         })
 };
+
+
 let clearDot = function(id) {
     axios.get(`http://e.dgut.edu.cn/api/home/readRedDot?proc_inst_id=${id}`, {
             headers: {

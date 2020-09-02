@@ -7,8 +7,8 @@
         iamUser = (user === socket.id) || (!user);
 
         console.log(user, socket.id);
-        if (!iamUser || first) {
-            if (iamUser) {
+        if (iamUser || first) {
+            if (iamUser && first) {
                 console.log('websocket连接成功', socket);
                 addMsg('.monitor .msg', 'websocket连接成功');
                 first = false;
@@ -28,13 +28,14 @@
                 }, 300));
             } else {
                 console.log(iamUser);
-                !iamUser && (addMsg('.monitor .msg', '服务器正忙，稍后再试吧'), changeState(false));
+                !iamUser && first && (addMsg('.monitor .msg', '服务器正忙，稍后再试吧'), changeState(false), first = false);
             }
         }
     });
 
     socket.on('msg', function(data) { // 监听服务端的消息“judgeConnection”
         addMsg('.monitor .msg', data);
+        msgScroll();
         try {
             data = JSON.parse(data);
             if (data.message === '获取下载地址成功') {
@@ -43,13 +44,14 @@
                     window.open(url, '_blank');
                 }));
                 document.querySelector('#download').removeAttribute('disabled');
-                window.open(url, '_blank');
+                // window.open(url, '_blank');
             } else
             if (data.message === '参数获取成功,流程已启动') {
                 document.querySelector('#getFile').click();
             } else
             if (data.code === 0) {
                 console.log('空闲');
+                first = true;
                 socket.emit('judgeConnection');
             }
             console.log(data);
@@ -66,6 +68,10 @@ function factory() {
 
 function addMsg(el, msg) {
     document.querySelector(el).innerHTML += `<li>${msg}</li>\n\n`
+}
+
+function msgScroll() {
+    document.querySelector('.msg').scrollTo(0, document.querySelector('.msg').scrollHeight);
 }
 
 function debounce(func, delay = 300, immediately = false) {

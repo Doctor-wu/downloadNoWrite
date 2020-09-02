@@ -1,38 +1,40 @@
 module.exports = function(app) {
     // const express = require('express');
     // const app = express();
-    let user, emitMsg2, users = [];
+    let currUser, emitMsg2, users = [];
     const server = require('http').createServer(app);
     const io = require('socket.io')(server);
     const _ = require('underscore');
     server.listen(3001);
 
-    io.on('connection', function(socket) { // socket相关监听都要放在这个回调里
+    io.on('connection', (socket) => { // socket相关监听都要放在这个回调里
         // console.log('a user connected');
         users.push(socket.id);
 
-        socket.on("disconnect", function() {
+        socket.on("disconnect", () => {
             // console.log("a user go out");
+            let oldUser = currUser;
             users = users.filter(v => v !== socket.id);
-            user = users[0];
-            emitMsg2('msg', JSON.stringify({ message: '服务器空闲下来啦!', code: 0 }));
-            console.log('user:', user);
+            currUser = users[0];
+            if (currUser !== oldUser) {
+                emitMsg2('msg', JSON.stringify({ message: '服务器空闲下来啦!', code: 0 }), currUser);
+            }
+            io.emit("msg", `当前在线人数：${users.length}`);
+            // console.log('currUser:', user);
         });
 
-        socket.on("judgeConnection", function() {
-            let lock = !!user && user !== socket.id;
-            console.log(user, socket.id);
-            if (!lock) {
-                io.emit("judgeConnection", user);
-                user = socket.id;
-                lock = !lock;
-            } else {
-                io.emit("judgeConnection", user);
-            }
+        socket.on("judgeConnection", () => {
+            if (currUser === undefined) {
+                currUser = users[0];
+                console.log('currUser access', currUser, users[0]);
+            };
+            console.log(currUser, socket.id, users);
+            io.emit("judgeConnection", currUser);
+            io.emit("msg", `当前在线人数：${users.length}`);
         });
     });
-    emitMsg2 = function(evt, msg) {
-        let toSocket = _.findWhere(io.sockets.sockets, { id: user });
+    emitMsg2 = function(evt, msg, id) {
+        let toSocket = _.findWhere(io.sockets.sockets, { id: id || currUser });
         if (!toSocket) toSocket = io;
         toSocket.emit(evt, msg);
     }

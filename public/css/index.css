@@ -66,7 +66,7 @@ html {
 
 .content .operate {
     background-color: #a6e3e9;
-    width: 70%;
+    width: 400px;
     float: left;
     height: 100%;
     display: flex;
@@ -76,7 +76,7 @@ html {
 }
 
 .content .operate .button {
-    width: 30%;
+    width: 60%;
     height: 60px;
 }
 
@@ -87,8 +87,7 @@ html {
 
 .content .monitor {
     background-color: lightblue;
-    width: 30%;
-    float: right;
+    margin-left: 400px;
     height: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -121,6 +120,94 @@ html {
     list-style: none;
     padding: 10px 0;
     letter-spacing: .07em;
+}
+
+@media screen and (max-width: 1300px) {
+     :root {
+        --margin: 300px;
+    }
+    .content .operate {
+        width: var(--margin);
+    }
+    .content .monitor {
+        margin-left: var(--margin);
+    }
+}
+
+@media screen and (max-width: 1100px) {
+     :root {
+        --margin: 250px;
+    }
+    .content .operate {
+        width: var(--margin);
+    }
+    .content .monitor {
+        margin-left: var(--margin);
+    }
+}
+
+@media screen and (max-width: 950px) {
+     :root {
+        --margin: 200px;
+    }
+    .content .operate {
+        width: var(--margin);
+    }
+    .content .operate .button {
+        width: 80%;
+    }
+    .content .monitor {
+        margin-left: var(--margin);
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .content .operate {
+        height: 100px;
+        width: 100%;
+        float: none;
+    }
+    .content .operate .button {
+        width: 100%;
+    }
+    .content .monitor {
+        margin-left: var(--margin);
+        float: none;
+        margin-left: 0;
+        padding-top: 100px;
+        margin-top: -95px;
+    }
+    .panel {
+        width: 100%;
+        height: 100vh;
+        margin: 0 auto;
+    }
+}
+
+@media screen and (max-width: 520px) {
+    .content .operate {
+        height: 80px;
+        width: 100%;
+        float: none;
+    }
+    .content .operate .button {
+        width: 100%;
+    }
+    .content .monitor {
+        margin-left: var(--margin);
+        float: none;
+        margin-left: 0;
+        padding-top: 80px;
+        margin-top: -75px;
+    }
+    .title h2 {
+        font-size: 16px;
+    }
+    .panel {
+        width: 100%;
+        height: 100vh;
+        margin: 0 auto;
+    }
 }
 
 .wrap {
