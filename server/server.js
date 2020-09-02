@@ -141,6 +141,25 @@ app.get('/getFile', async function(req, res, next) {
     });
 })
 
+app.get('/getDetail', async function(req, res, next) {
+    fs.readFile(`./file/people.json`, function(err, data) {
+        if (err) {
+            console.error(err);
+            emitMsg('暂无名单数据');
+            return;
+        }
+        data = JSON.parse(data.toString());
+        let result = {
+            time: data.time,
+            17: data.yiqi,
+            18: data.yiba,
+            19: data.yijiu
+        }
+        console.log(result);
+        emitMsg(result);
+    })
+})
+
 
 
 app.listen(4396, () => {

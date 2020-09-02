@@ -5,6 +5,7 @@ var request = require("request");
 const axios = require('axios');
 
 var xlsx = require('node-xlsx');
+const { emit } = require("process");
 
 
 
@@ -35,11 +36,13 @@ module.exports = function(emitMsg2) {
             });
         }
 
-        let parseFile = function(fileName) {
+        let parseFile = function() {
             return new Promise((resolve, reject) => {
                 fs.readFile(`./file/未打卡名单${new Date().toLocaleDateString()}.xls`, function(err, data) {
                     if (err) {
                         console.error(err);
+                        emitMsg('暂无名单数据');
+                        return;
                     }
                     console.log(data);
                     // 解析得到文档中的所有 sheet

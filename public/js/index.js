@@ -57,6 +57,9 @@
             console.log(data);
         } catch {}
     });
+    document.querySelector('#getDetail').addEventListener('click', debounce(() => {
+        axios.get('http://localhost:4396/getDetail').then(res => {})
+    }))
     console.log(socket);
     socket.emit('judgeConnection');
     return socket;
