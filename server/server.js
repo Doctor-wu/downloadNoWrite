@@ -145,7 +145,8 @@ app.get('/getDetail', async function(req, res, next) {
     fs.readFile(`./file/people.json`, function(err, data) {
         if (err) {
             console.error(err);
-            emitMsg('暂无名单数据');
+            emitMsg('暂无名单数据, 请重新拉取名单');
+            res.end();
             return;
         }
         data = JSON.parse(data.toString());
@@ -157,7 +158,8 @@ app.get('/getDetail', async function(req, res, next) {
         }
         console.log(result);
         emitMsg(result);
-    })
+        res.end();
+    });
 })
 
 
