@@ -5,7 +5,6 @@ var request = require("request");
 const axios = require('axios');
 
 var xlsx = require('node-xlsx');
-const { emit } = require("process");
 
 
 
@@ -44,7 +43,6 @@ module.exports = function(emitMsg2) {
                         emitMsg('暂无名单数据');
                         return;
                     }
-                    console.log(data);
                     // 解析得到文档中的所有 sheet
                     var sheets = xlsx.parse(data);
                     const yiqi = {
@@ -62,7 +60,6 @@ module.exports = function(emitMsg2) {
 
                     // 遍历 sheet
                     sheets.forEach(function(sheet) {
-                        console.log(sheet['name']);
                         // 读取每行内容
                         for (var rowId in sheet['data']) {
                             var row = sheet['data'][rowId];
@@ -110,12 +107,12 @@ module.exports = function(emitMsg2) {
                             .then(
                                 res => {
                                     emitMsg('文件解析成功!');
-                                    emitMsg(JSON.stringify({
-                                        time: res.time,
-                                        '17': res.yiqi.name,
-                                        '18': res.yiba.name,
-                                        '19': res.yijiu.name
-                                    }));
+                                    emitMsg(`
+                                        创建时间: ${res.time}</br></br>
+                                        17级未打卡名单: ${res.yiqi.name.join(',')}</br></br>
+                                        18级未打卡名单: ${res.yiba.name.join(',')}</br></br>
+                                        19级未打卡名单: ${res.yijiu.name.join(',')}</br></br>
+                                    `);
                                 }
                             )
                             .catch(e => {

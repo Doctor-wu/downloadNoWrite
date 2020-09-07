@@ -40,6 +40,7 @@
             data = JSON.parse(data);
             if (data.message === '获取下载地址成功') {
                 let url = data.data;
+                addMsg('.monitor .msg', `下载地址：<a href="${url}" target="_blank">${url}</a>`);
                 document.querySelector('#download').addEventListener('click', debounce(() => {
                     window.open(url, '_blank');
                 }));
@@ -70,7 +71,7 @@ function factory() {
 }
 
 function addMsg(el, msg) {
-    document.querySelector(el).innerHTML += `<li>${msg}</li>\n\n`
+    document.querySelector(el).innerHTML += `<li>${msg}</li></br>`
 }
 
 function msgScroll() {

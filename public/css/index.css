@@ -6,18 +6,20 @@
 
 ::-webkit-scrollbar-track-piece {
     /* //滚动条凹槽的颜色，还可以设置边框属性 */
-    background-color: #f8f8f8;
+    background-color: rgba(248, 248, 248, .8);
+    border-radius: 8px;
 }
 
  ::-webkit-scrollbar {
     /* //滚动条的宽度 */
-    width: 9px;
+    width: 6px;
     height: 9px;
+    border-radius: 8px;
 }
 
  ::-webkit-scrollbar-thumb {
     /* //滚动条的设置 */
-    background-color: #dddddd;
+    background-color: rgba(221, 221, 221, .8);
     background-clip: padding-box;
     min-height: 28px;
 }

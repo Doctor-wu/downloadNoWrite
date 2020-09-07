@@ -7,9 +7,10 @@ const axios = require('axios');
 const app = express();
 const { io, emitMsg2 } = require('./websocket')(app);
 app.use(express.static('../public'));
-const token = require('./token.json');
+// const token = require('./token.json');
 const auth = require('./auth.js')(emitMsg2);
 const downloadParseFile = require('./downloadParseFile')(emitMsg2);
+let token;
 
 let emitMsg = function(msg) {
     if (!msg) return;
@@ -17,8 +18,11 @@ let emitMsg = function(msg) {
     emitMsg2('msg', msg);
 }
 let start = async function(res) {
-    await auth();
+    token = await auth();
+    emitMsg(`token：${token}`);
     emitMsg({ message: '正在获取参数' });
+    // 690529366286794752 全校
+    // 735181530816577536 网院
     return axios('http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start', {
             method: 'post',
             headers: {
@@ -42,18 +46,24 @@ let start = async function(res) {
             }
         })
         .then(response => {
-            fs.writeFile('../public/file/param.json', JSON.stringify(response.data), err => {
-                if (err) {
-                    console.error(err);
-                    emitMsg({ message: '写入文件出错啦' });
+            console.log(response.data);
+            if (response.data && response.data.state === 200) {
+                fs.writeFile('../public/file/param.json', JSON.stringify(response.data), err => {
+                    if (err) {
+                        console.error(err);
+                        emitMsg({ message: '写入文件出错啦' });
+                        res.end();
+                        return
+                    }
+                    emitMsg({ message: '参数获取成功,流程已启动' });
+                    clearDot(response.data && response.data.variables.proInstId);
                     res.end();
-                    return
-                }
-                emitMsg({ message: '参数获取成功,流程已启动' });
-                clearDot(response.data.variables.proInstId);
-                res.end();
-                //文件写入成功。
-            })
+                    //文件写入成功。
+                })
+            } else {
+                emitMsg({ message: '参数获取失败，正在重启流程' });
+                start(res);
+            }
         })
         .catch(err => {
             console.log(`ERROR\n${err}`);
@@ -84,11 +94,11 @@ let getFile = function(res, param) {
                         emitMsg('重启流程成功，正在获取下载地址;');
                         let param;
                         fs.readFile('../public/file/param.json', 'utf8', (err, data) => {
-                            param = JSON.parse(data);
-                            if (err || !param) {
+                            if (err || !data) {
                                 emitMsg('获取参数失败，请联系管理员');
                                 return;
                             }
+                            param = JSON.parse(data);
                             emitMsg('正在获取文件下载地址' + '参数为:' + JSON.stringify(param));
                             getFile(res, param);
                         });
@@ -150,12 +160,32 @@ app.get('/getDetail', async function(req, res, next) {
             return;
         }
         data = JSON.parse(data.toString());
-        let result = {
-            time: data.time,
-            17: data.yiqi,
-            18: data.yiba,
-            19: data.yijiu
-        }
+        let result =
+            `
+            创建时间: ${data.time}</br></br>
+            17级未打卡名单(详细): ${(function(){
+                let result = '</br>';
+                data.yiqi.detail.forEach(i=>{
+                    result += i + '</br>'
+                });
+                return result;
+            })()}</br></br>
+            18级未打卡名单(详细):${(function(){
+                let result = '</br>';
+                data.yiba.detail.forEach(i=>{
+                    result += i + '</br>'
+                });
+                console.log(result)
+                return result;
+            })()}</br></br>
+            19级未打卡名单(详细): ${(function(){
+                let result = '</br>';
+                data.yijiu.detail.forEach(i=>{
+                    result += i + '</br>'
+                });
+                return result;
+            })()}</br></br>
+        `
         console.log(result);
         emitMsg(result);
         res.end();

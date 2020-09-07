@@ -53,7 +53,7 @@ module.exports = function(emit) {
                             wechat_verify: ""
                         }
                     }).then(res => {
-                        emitMsg('获取url成功', res.data);
+                        emitMsg('获取url成功' + JSON.stringify(res.data));
                         preURL = res.data.info;
                         console.log(preURL);
                     }).catch(err => {
@@ -67,15 +67,18 @@ module.exports = function(emit) {
                             })
                             .then(res => {
                                 let result = res.request.path.match(/access_token=[a-z0-9]+/);
+                                // console.log(result);
                                 let realToken = result[0].split('=')[1];
-                                fs.writeFile('./token.json', JSON.stringify(realToken), function(err) {
-                                    if (err) {
-                                        console.log(err);
-                                    } else {
-                                        emitMsg('成功更新token!');
-                                        resolve();
-                                    }
-                                });
+                                // fs.writeFile('./token.json', JSON.stringify(realToken), function(err) {
+                                //     if (err) {
+                                //         console.log(err);
+                                //     } else {
+                                //         emitMsg('成功更新token!');
+                                //         resolve(realToken);
+                                //     }
+                                // });
+                                emitMsg('成功更新token!');
+                                resolve(realToken);
                             })
                     })
             })
