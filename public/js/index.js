@@ -1,5 +1,13 @@
 // websocket 连接服务
 (function() {
+    let options = {
+        dir: "ltr",
+        lang: "zh-CN",
+        body: "有人通过审批啦!",
+        icon: "https://dtwu.club/avatar.png",
+        tag: "msgId"
+    }
+
     this.socket = io("ws://127.0.0.1:3001"); // 建立链接
     let iamUser = false,
         first = true;
@@ -17,6 +25,9 @@
                 document.querySelector('#start').addEventListener('click', debounce(() => {
                     axios.get('http://localhost:4396/start');
                 }, 300));
+                document.querySelector('#judgeOutSchool').addEventListener('click', debounce(() => {
+                    axios.get('http://localhost:4396/judgeOutSchool');
+                }, 300, true));
                 document.querySelector('#clearMsg').addEventListener('click', debounce(() => {
                     document.querySelector('.monitor .msg').innerHTML = `<li class="loading">
                     <div class="wrap">
@@ -35,6 +46,10 @@
 
     socket.on('msg', function(data) { // 监听服务端的消息“judgeConnection”
         addMsg('.monitor .msg', data);
+        if (data.toString().includes("审批成功!</h3></br>")) {
+            console.log("notify");
+            new Notification(data.match(/\>(.+[^<>])+\</i)[1], options);
+        }
         msgScroll();
         try {
             data = JSON.parse(data);
@@ -102,5 +117,42 @@ function changeState(op) {
     } else {
         el.classList.add('offline');
         el.classList.remove('online');
+    }
+}
+
+
+function showNotice(msg) {
+    //发送通知
+
+    if (Notification.permission == "default") {
+        Notification.requestPermission();
+    } else {
+        newNotify = function() {
+                var notification = new Notification("系统通知:", {
+                    dir: "auto",
+                    lang: "hi",
+                    requireInteraction: true,
+                    //tag: "testTag",
+                    icon: "https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo_top_86d58ae1.png",
+                    body: msg
+                });
+                notification.onclick = function(event) {
+                    //回到发送此通知的页面
+                    window.focus();
+                    //回来后要做什么
+                    console.log("I'm back");
+                }
+            }
+            //权限判断
+        if (Notification.permission == "granted") {
+            newNotify();
+        } else {
+            //请求权限
+            Notification.requestPermission(function(perm) {
+                if (perm == "granted") {
+                    newNotify();
+                }
+            })
+        }
     }
 }

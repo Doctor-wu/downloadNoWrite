@@ -17,12 +17,16 @@ let emitMsg = function(msg) {
     if (typeof msg !== 'string') msg = JSON.stringify(msg);
     emitMsg2('msg', msg);
 }
-let start = async function(res) {
+let start = async function(res, defId = '735181530816577536') {
     token = await auth();
     emitMsg(`token：${token}`);
     emitMsg({ message: '正在获取参数' });
     // 690529366286794752 全校
     // 735181530816577536 网院
+    let date = new Date().toLocaleDateString().split("-");
+    if (date[1] < 10) date[1] = "0" + date[1];
+    if (date[2] < 10) date[1] = "0" + date[1];
+    date = date.join("-");
     return axios('http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start', {
             method: 'post',
             headers: {
@@ -32,7 +36,7 @@ let start = async function(res) {
             data: {
                 "parameters": [{
                         "key": "defId",
-                        "value": "735181530816577536"
+                        "value": defId
                     },
                     {
                         "key": "version",
@@ -40,7 +44,7 @@ let start = async function(res) {
                     },
                     {
                         "key": "data",
-                        "value": "{ id: '', shenQingRen: 42593960257912867, suoShuBuMen: 5013628906935158270, xiaZaiDiZhi: '', zhangHao: 2009021 }"
+                        "value": `{"id":"","shenQingRen":"42593960257912867","suoShuBuMen":"5013628906935158270","xuanZeShiJian":${date},"xiaZaiDiZhi":"","zhangHao":"2009021"}`
                     }
                 ]
             }
@@ -58,6 +62,7 @@ let start = async function(res) {
                     emitMsg({ message: '参数获取成功,流程已启动' });
                     clearDot(response.data && response.data.variables.proInstId);
                     res.end();
+                    return Promise.resolve(response.data);
                     //文件写入成功。
                 })
             } else {
@@ -129,6 +134,8 @@ let clearDot = function(id) {
             console.error(err)
         })
 }
+
+
 app.get('/', function(req, res, next) {
     try {
         next();
@@ -190,7 +197,99 @@ app.get('/getDetail', async function(req, res, next) {
         emitMsg(result);
         res.end();
     });
-})
+});
+
+
+
+let judgeOutSchool = async function() {
+    let count = 15,
+        success = 0,
+        failed = 0;
+    return axios.get(`http://e.dgut.edu.cn/api/home/getPendingTask?search=&offset=0&length=${count}`, {
+        headers: {
+            "X-Authorization-access_token": token
+        }
+    }).then(res => {
+        console.log(`// =============================================总共还剩${res.data.info.total}人=================================================== //`);
+        emitMsg(`正在审批: ${JSON.stringify(res.data.info.list.map(s => s.creator))}`);
+        return res.data.info.list
+    }).then(list => {
+        return list.map(item => {
+            return axios.get(`http://e.dgut.edu.cn/ibps/business/v3/bpm/task/getFormData?taskId=${item.task_id}`, {
+                    headers: {
+                        "X-Authorization-access_token": token
+                    }
+                })
+                .then(stuInfo => {
+                    console.log(item.creator);
+                    if (!item.creator) return Promise.reject("null");
+                    emitMsg(`${item.creator}获取数据成功`);
+                    return { task_id: item.task_id, creator: item.creator, boData: stuInfo.data.data.boData }
+                }).catch(e => {
+                    emitMsg(`${item.creator}获取数据失败`);
+                    return Promise.reject(e);
+                })
+        })
+    }).then(infoArr => {
+        return infoArr.map(pStu => pStu.then(stu => {
+            return axios(`http://e.dgut.edu.cn/ibps/business/v3/bpm/task/agree`, {
+                method: "POST",
+                headers: {
+                    "X-Authorization-access_token": token
+                },
+                data: {
+                    opinion: "同意",
+                    taskId: stu.task_id,
+                    data: stu.boData
+                }
+            }).then(res => {
+                if (res.data.state === 200) {
+                    emitMsg(`<h3 style="color: red">${stu.creator}审批成功!</h3></br>`);
+                    console.log(`${stu.creator}审批成功!`);
+                    success++;
+                } else {
+                    emitMsg(`${stu.creator}出现特殊情况,${JSON.stringify(res.data)}`);
+                    console.log(`${stu.creator}审批失败`);
+                    failed++;
+                }
+                emitMsg(`剩余${--count}人仍在处理`);
+                emitMsg(`成功<h3 style="color: red;display: inline-block">${success}</h3>人，失败${failed}人`);
+            }).catch(e => {
+                console.log(e.response);
+                console.log(`${stu.creator}审批失败`);
+                emitMsg(`剩余${--count}人仍在处理`);
+                failed++;
+                emitMsg(`成功<h3 style="color: red;display: inline-block">${success}</h3>人，失败${failed}人`);
+            })
+
+        }).catch(e => {
+            emitMsg(`剩余${--count}人仍在处理`);
+            failed++;
+            emitMsg(`成功<h3 style="color: red;display: inline-block">${success}</h3>人，失败${failed}人`);
+            return;
+        }));
+    }).catch(e => e);
+
+}
+app.get("/judgeOutSchool", async function(req, res, next) {
+    token = await auth();
+    judgeOutSchoolGen();
+    res.end();
+});
+
+async function judgeOutSchoolGen() {
+    let result = await judgeOutSchool();
+    Promise.allSettled(result).then(res => {
+        judgeOutSchoolGen();
+    }).catch(e => {
+        console.log(e);
+        judgeOutSchoolGen();
+    });
+}
+module.exports = {
+    start,
+    clearDot
+}
 
 
 

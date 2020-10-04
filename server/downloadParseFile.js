@@ -10,7 +10,7 @@ var xlsx = require('node-xlsx');
 
 module.exports = function(emitMsg2) {
         function emitMsg(msg) {
-            emitMsg2('msg', msg);
+            emitMsg2 && emitMsg2('msg', msg);
         }
         let downloadFile = async function(url, fileName) {
             if (!fs.existsSync('./file')) {
@@ -99,20 +99,21 @@ module.exports = function(emitMsg2) {
         }
 
         return function(url) {
-            downloadFile(url, `未打卡名单${new Date().toLocaleDateString()}.xls`)
+            return downloadFile(url, `未打卡名单${new Date().toLocaleDateString()}.xls`)
                 .then(
                     res => {
                         emitMsg('文件下载完成，正在解析!')
-                        parseFile(`未打卡名单${new Date().toLocaleDateString()}.xls`)
+                        return parseFile(`未打卡名单${new Date().toLocaleDateString()}.xls`)
                             .then(
                                 res => {
                                     emitMsg('文件解析成功!');
                                     emitMsg(`
                                         创建时间: ${res.time}</br></br>
-                                        17级未打卡名单: ${res.yiqi.name.join(',')}</br></br>
-                                        18级未打卡名单: ${res.yiba.name.join(',')}</br></br>
-                                        19级未打卡名单: ${res.yijiu.name.join(',')}</br></br>
+                                        17级未打卡名单(${res.yiqi.name.length}): ${res.yiqi.name.join(',')}</br></br>
+                                        18级未打卡名单(${res.yiba.name.length}): ${res.yiba.name.join(',')}</br></br>
+                                        19级未打卡名单(${res.yijiu.name.length}): ${res.yijiu.name.join(',')}</br></br>
                                     `);
+                                    return Promise.resolve(res);
                                 }
                             )
                             .catch(e => {

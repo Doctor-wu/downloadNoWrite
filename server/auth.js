@@ -10,7 +10,7 @@ module.exports = function(emit) {
                 preURL;
 
             function emitMsg(msg) {
-                emit('msg', msg);
+                emit && emit('msg', msg);
             }
 
 
@@ -37,7 +37,7 @@ module.exports = function(emit) {
             ).then(_ => {
                 // [POST] https://cas.dgut.edu.cn/home/Oauth/getToken/appid/ibpstest/state/home 获取url
                 // username:2009021
-                // password:Xtdx170830
+                // password:XTdx170830
                 // __token__:27a9d03a772a3197fd7f74b0036601a0
                 // wechat_verify:
                 axios('https://cas.dgut.edu.cn/home/Oauth/getToken/appid/ibpstest/state/home', {
@@ -48,7 +48,7 @@ module.exports = function(emit) {
                         },
                         data: {
                             username: "2009021",
-                            password: "Xtdx170830",
+                            password: "XTdx170830",
                             __token__: preToken.slice(1, -2),
                             wechat_verify: ""
                         }
