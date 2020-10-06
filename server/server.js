@@ -5,29 +5,34 @@ const path = require("path");
 const request = require("request");
 const axios = require('axios');
 const app = express();
-const { io, emitMsg2 } = require('./websocket')(app);
+const {
+    io,
+    emitMsg2
+} = require('./websocket')(app);
 app.use(express.static('../public'));
 // const token = require('./token.json');
 const auth = require('./auth.js')(emitMsg2);
 const downloadParseFile = require('./downloadParseFile')(emitMsg2);
 let token;
 
-let emitMsg = function(msg) {
+let emitMsg = function (msg) {
     if (!msg) return;
     if (typeof msg !== 'string') msg = JSON.stringify(msg);
     emitMsg2('msg', msg);
 }
-let start = async function(res, defId = '735181530816577536') {
+let start = async function (res, defId = '735181530816577536') {
     token = await auth();
     emitMsg(`token：${token}`);
-    emitMsg({ message: '正在获取参数' });
+    emitMsg({
+        message: '正在获取参数'
+    });
     // 690529366286794752 全校
     // 735181530816577536 网院
     let date = new Date().toLocaleDateString().split("-");
     if (date[1] < 10) date[1] = "0" + date[1];
     if (date[2] < 10) date[2] = "0" + date[2];
     date = date.join("-");
-    emitMsg("日期为: "+date);
+    emitMsg("日期为: " + date);
     return axios('http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start', {
             method: 'post',
             headers: {
@@ -56,28 +61,36 @@ let start = async function(res, defId = '735181530816577536') {
                 fs.writeFile('../public/file/param.json', JSON.stringify(response.data), err => {
                     if (err) {
                         console.error(err);
-                        emitMsg({ message: '写入文件出错啦' });
+                        emitMsg({
+                            message: '写入文件出错啦'
+                        });
                         res.end();
                         return
                     }
-                    emitMsg({ message: '参数获取成功,流程已启动' });
+                    emitMsg({
+                        message: '参数获取成功,流程已启动'
+                    });
                     clearDot(response.data && response.data.variables.proInstId);
                     res.end();
                     return Promise.resolve(response.data);
                     //文件写入成功。
                 })
             } else {
-                emitMsg({ message: '参数获取失败，正在重启流程' });
+                emitMsg({
+                    message: '参数获取失败，正在重启流程'
+                });
                 start(res);
             }
         })
         .catch(err => {
             console.log(`ERROR\n${err}`);
-            emitMsg({ message: '启动获取名单出错啦' });
+            emitMsg({
+                message: '启动获取名单出错啦'
+            });
             res.end();
         });
 };
-let getFile = function(res, param) {
+let getFile = function (res, param) {
     axios(`http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/instFormInfo?instId=${param.variables.proInstId}`, {
             headers: {
                 "X-Authorization-access_token": token,
@@ -88,7 +101,10 @@ let getFile = function(res, param) {
         .then(resolve => {
             if (resolve.data.state === 200) {
                 console.log(resolve.data.data);
-                emitMsg({ message: '获取下载地址成功', data: JSON.parse(resolve.data.data.boData).xiaZaiDiZhi });
+                emitMsg({
+                    message: '获取下载地址成功',
+                    data: JSON.parse(resolve.data.data.boData).xiaZaiDiZhi
+                });
                 downloadParseFile(JSON.parse(resolve.data.data.boData).xiaZaiDiZhi);
                 res.end();
             } else {
@@ -114,13 +130,15 @@ let getFile = function(res, param) {
         })
         .catch(err => {
             console.log(`ERROR\n${err}`);
-            emitMsg({ message: '获取列表出错啦' });
+            emitMsg({
+                message: '获取列表出错啦'
+            });
             res.end();
         })
 };
 
 
-let clearDot = function(id) {
+let clearDot = function (id) {
     axios.get(`http://e.dgut.edu.cn/api/home/readRedDot?proc_inst_id=${id}`, {
             headers: {
                 "X-Authorization-access_token": token,
@@ -137,19 +155,19 @@ let clearDot = function(id) {
 }
 
 
-app.get('/', function(req, res, next) {
+app.get('/', function (req, res, next) {
     try {
         next();
     } catch (err) {
         console.log(err)
     }
 })
-app.get('/start', function(req, res, next) {
+app.get('/start', function (req, res, next) {
     // 启动获取名单的流程
     start(res);
 });
 
-app.get('/getFile', async function(req, res, next) {
+app.get('/getFile', async function (req, res, next) {
     let param;
     fs.readFile('../public/file/param.json', 'utf8', (err, data) => {
         if (err) emitMsg('获取参数失败，请联系管理员');
@@ -159,8 +177,8 @@ app.get('/getFile', async function(req, res, next) {
     });
 })
 
-app.get('/getDetail', async function(req, res, next) {
-    fs.readFile(`./file/people.json`, function(err, data) {
+app.get('/getDetail', async function (req, res, next) {
+    fs.readFile(`./file/people.json`, function (err, data) {
         if (err) {
             console.error(err);
             emitMsg('暂无名单数据, 请重新拉取名单');
@@ -202,7 +220,7 @@ app.get('/getDetail', async function(req, res, next) {
 
 
 
-let judgeOutSchool = async function() {
+let judgeOutSchool = async function () {
     let count = 15,
         success = 0,
         failed = 0;
@@ -225,7 +243,11 @@ let judgeOutSchool = async function() {
                     console.log(item.creator);
                     if (!item.creator) return Promise.reject("null");
                     emitMsg(`${item.creator}获取数据成功`);
-                    return { task_id: item.task_id, creator: item.creator, boData: stuInfo.data.data.boData }
+                    return {
+                        task_id: item.task_id,
+                        creator: item.creator,
+                        boData: stuInfo.data.data.boData
+                    }
                 }).catch(e => {
                     emitMsg(`${item.creator}获取数据失败`);
                     return Promise.reject(e);
@@ -272,7 +294,7 @@ let judgeOutSchool = async function() {
     }).catch(e => e);
 
 }
-app.get("/judgeOutSchool", async function(req, res, next) {
+app.get("/judgeOutSchool", async function (req, res, next) {
     token = await auth();
     judgeOutSchoolGen();
     res.end();
