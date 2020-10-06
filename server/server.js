@@ -25,8 +25,9 @@ let start = async function(res, defId = '735181530816577536') {
     // 735181530816577536 网院
     let date = new Date().toLocaleDateString().split("-");
     if (date[1] < 10) date[1] = "0" + date[1];
-    if (date[2] < 10) date[1] = "0" + date[1];
+    if (date[2] < 10) date[2] = "0" + date[2];
     date = date.join("-");
+    emitMsg("日期为: "+date);
     return axios('http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start', {
             method: 'post',
             headers: {
