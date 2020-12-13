@@ -2,7 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 
 
-module.exports = function(emit) {
+module.exports = function(emit=() => {}) {
     return function() {
         return new Promise((resolve, reject) => {
             let preToken,
@@ -48,7 +48,7 @@ module.exports = function(emit) {
                         },
                         data: {
                             username: "2009021",
-                            password: "XTdx170830",
+                            password: "170830xtdX",
                             __token__: preToken.slice(1, -2),
                             wechat_verify: ""
                         }

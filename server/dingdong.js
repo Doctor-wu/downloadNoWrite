@@ -63,6 +63,7 @@ function postData(casIds) {
 
 async function notify() {
     // 690529366286794752 全校
+    // 735181530816577536 网院
     token = await auth();
     axios('http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start', {
         method: 'post',
