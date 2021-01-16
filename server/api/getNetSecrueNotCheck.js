@@ -37,27 +37,25 @@ let start = async function (res, defId = "735181530816577536") {
     if (date[2] < 10) date[2] = "0" + date[2];
     date = date.join("-");
     emitMsg("日期为: " + date);
-    return axios("http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start", {
-        method: "post",
+    return axios.post("http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/start", {
+        parameters: [
+            {
+                key: "defId",
+                value: defId,
+            },
+            {
+                key: "version",
+                value: "0",
+            },
+            {
+                key: "data",
+                value: `{"id":"","shenQingRen":"42593960257912867","suoShuBuMen":"5013628906935158270","xuanZeShiJian":${date},"xiaZaiDiZhi":"","zhangHao":"2009021"}`,
+            },
+        ],
+    }, {
         headers: {
             "X-Authorization-access_token": token,
             "Content-Type": "application/json",
-        },
-        data: {
-            parameters: [
-                {
-                    key: "defId",
-                    value: defId,
-                },
-                {
-                    key: "version",
-                    value: "0",
-                },
-                {
-                    key: "data",
-                    value: `{"id":"","shenQingRen":"42593960257912867","suoShuBuMen":"5013628906935158270","xuanZeShiJian":${date},"xiaZaiDiZhi":"","zhangHao":"2009021"}`,
-                },
-            ],
         },
     })
         .then((response) => {
@@ -71,27 +69,19 @@ let start = async function (res, defId = "735181530816577536") {
                 start(res);
             }
         })
-        .catch((err) => {
-            console.log(`ERROR\n${err}`);
-            emitMsg({
-                message: "启动获取名单出错啦",
-            });
-            res.end();
-        });
-};
-
-let getFile = function (res, param) {
-    axios(
-        `http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/instFormInfo?instId=${param.variables.proInstId}`,
-        {
-            headers: {
-                "X-Authorization-access_token": token,
-                "Content-Type": "application/json",
-            },
-            timeout: 10000,
-        }
-    )
-        .then((resolve) => {
+        .then(param => {
+            return axios(
+                `http://e.dgut.edu.cn/ibps/business/v3/bpm/instance/instFormInfo?instId=${param.variables.proInstId}`,
+                {
+                    headers: {
+                        "X-Authorization-access_token": token,
+                        "Content-Type": "application/json",
+                    },
+                    timeout: 10000,
+                }
+            );
+        })
+        .then(resolve => {
             if (resolve.data.state === 200) {
                 console.log(resolve.data.data);
                 emitMsg({
@@ -104,26 +94,27 @@ let getFile = function (res, param) {
                 console.log(`${resolve.data.message},${resolve.data.cause}`);
                 emitMsg(`${resolve.data.message},${resolve.data.cause}`);
                 emitMsg(`正在重新启动流程`);
-                start(res).then((_) => {
-                    emitMsg("重启流程成功，正在获取下载地址;");
-                    let param;
-                    fs.readFile("../public/file/param.json", "utf8", (err, data) => {
-                        if (err || !data) {
-                            emitMsg("获取参数失败，请联系管理员");
-                            return;
-                        }
-                        param = JSON.parse(data);
-                        emitMsg("正在获取文件下载地址" + "参数为:" + JSON.stringify(param));
-                        getFile(res, param);
-                    });
-                    getFile(res, param);
-                });
+                start(res);
             }
+        })
+        .then(_ => {
+            fs.readFile(path.resolve(__dirname, './file/people.json'), (err, data) => {
+                if (err) {
+                    console.error(err);
+                    return false;
+                }
+                let parseRes = JSON.parse(data.toString());
+                console.log(parseRes)
+                res.json({
+                    casids: parseRes['$All'] && parseRes['$All']['casIds']
+                })
+                console.log('data', parseRes);
+            })
         })
         .catch((err) => {
             console.log(`ERROR\n${err}`);
             emitMsg({
-                message: "获取列表出错啦",
+                message: "启动获取名单出错啦",
             });
             res.end();
         });
@@ -133,19 +124,9 @@ app.get('/getList', async (req, res) => {
     // res.json({hello: "world"});
     let param = await start(res);
     console.log('param', param)
-    await getFile(res, param);
-    fs.readFile(path.resolve(__dirname, './file/people.json'), (err, data) => {
-        if (err) {
-            console.error(err);
-            return false;
-        }
-        let parseRes = JSON.parse(data.toString());
-        res.json({
-            casids: parseRes['$All']['casIds']
-        })
-        console.log('data', parseRes);
-    })
 });
+
+
 
 
 app.listen(28762);

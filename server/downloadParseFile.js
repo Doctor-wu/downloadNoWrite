@@ -46,7 +46,13 @@ module.exports = function (emitMsg2 = () => {
                 }
                 // 解析得到文档中的所有 sheet
                 var sheets = xlsx.parse(data);
-                const gradeModel = {};
+                const gradeModel = {
+                    $All: {
+                        name: [],
+                        casIds: [],
+                        detail: []
+                    }
+                };
                 const grades = [{
                     key: "$2017",
                     gradeIndex: "2017"
